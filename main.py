@@ -6,7 +6,6 @@ from pyrr import Vector3, Matrix44
 from ctypes import c_float, sizeof, c_void_p
 
 CURDIR = Path(__file__).parent.absolute()
-sys.path.append(str(CURDIR.parent))
 
 from shader import Shader
 from camera import Camera, CameraMovement
@@ -53,8 +52,8 @@ def main():
 
     gl.glEnable(gl.GL_DEPTH_TEST)
 
-    lamp_shader = Shader(CURDIR / "shaders/1.lamp.vs", CURDIR / "shaders/1.lamp.fs")
-    lighting_shader = Shader(CURDIR / "shaders/1.colors.vs", CURDIR / "shaders/1.colors.fs")
+    lamp_shader = Shader(CURDIR / "shaders/lamps.vs", CURDIR / "shaders/lamps.fs")
+    lighting_shader = Shader(CURDIR / "shaders/color.vs", CURDIR / "shaders/color.fs")
 
     vertices = [
         -0.5, -0.5, -0.5,
