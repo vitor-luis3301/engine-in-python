@@ -1,4 +1,4 @@
-#About the project
+# About the project
 
 A little graphics engine made in python.
 
