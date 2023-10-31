@@ -3,7 +3,7 @@ import glfw
 import OpenGL.GL as gl
 from pathlib import Path
 from pyrr import Vector3, Matrix44
-from ctypes import c_float, sizeof, c_void_p
+from ctypes import c_float, sizeof, c_void_p, c_uint
 
 CURDIR = Path(__file__).parent.absolute()
 
@@ -15,7 +15,7 @@ SRC_WIDTH = 800
 SRC_HEIGHT = 600
 
 # -- camera
-camera = Camera(Vector3([0.0, 0.0, 3.0]))
+camera = Camera(Vector3([0.0, 0.0, 5.0]))
 last_x = SRC_WIDTH / 2
 last_y = SRC_HEIGHT / 2
 first_mouse = True
@@ -25,7 +25,6 @@ delta_time = 0.0
 last_frame = 0.0
 
 light_pos = Vector3([1.2, 1.0, 2.0])
-
 
 def main():
     global delta_time, last_frame
@@ -52,125 +51,102 @@ def main():
 
     gl.glEnable(gl.GL_DEPTH_TEST)
 
-    lamp_shader = Shader(CURDIR / "shaders/lamps.vs", CURDIR / "shaders/lamps.fs")
-    lighting_shader = Shader(CURDIR / "shaders/color.vs", CURDIR / "shaders/color.fs")
+    shader = Shader(CURDIR / 'shaders/vertex.vs', CURDIR / 'shaders/fragment.fs')
 
-    vertices = [
-        -0.5, -0.5, -0.5,
-         0.5, -0.5, -0.5,
-         0.5,  0.5, -0.5,
-         0.5,  0.5, -0.5,
-        -0.5,  0.5, -0.5,
-        -0.5, -0.5, -0.5,
+    data = [
+        # positions         colors      normal
+        -0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
+         0.5, -0.5, -0.5, 0.0, 1.0, 0.0,
+         0.5,  0.5, -0.5, 0.0, 0.0, 1.0,
+         0.5,  0.5, -0.5, 0.0, 0.0, 1.0,  # Front
+        -0.5,  0.5, -0.5, 0.0, 1.0, 0.0,
+        -0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
 
-        -0.5, -0.5,  0.5,
-         0.5, -0.5,  0.5,
-         0.5,  0.5,  0.5,
-         0.5,  0.5,  0.5,
-        -0.5,  0.5,  0.5,
-        -0.5, -0.5,  0.5,
+        -0.5, -0.5,  0.5, 1.0, 0.0, 0.0,
+         0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
+         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
+         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
+        -0.5,  0.5,  0.5, 0.0, 1.0, 0.0,
+        -0.5, -0.5,  0.5, 1.0, 0.0, 0.0,
 
-        -0.5,  0.5,  0.5,
-        -0.5,  0.5, -0.5,
-        -0.5, -0.5, -0.5,
-        -0.5, -0.5, -0.5,
-        -0.5, -0.5,  0.5,
-        -0.5,  0.5,  0.5,
+        -0.5,  0.5,  0.5, 1.0, 0.0, 0.0,
+        -0.5,  0.5, -0.5, 0.0, 1.0, 0.0,
+        -0.5, -0.5, -0.5, 0.0, 0.0, 1.0,
+        -0.5, -0.5, -0.5, 0.0, 0.0, 1.0,
+        -0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
+        -0.5,  0.5,  0.5, 1.0, 0.0, 0.0,
 
-         0.5,  0.5,  0.5,
-         0.5,  0.5, -0.5,
-         0.5, -0.5, -0.5,
-         0.5, -0.5, -0.5,
-         0.5, -0.5,  0.5,
-         0.5,  0.5,  0.5,
+         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
+         0.5,  0.5, -0.5, 0.0, 1.0, 0.0,
+         0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
+         0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
+         0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
+         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
 
-        -0.5, -0.5, -0.5,
-         0.5, -0.5, -0.5,
-         0.5, -0.5,  0.5,
-         0.5, -0.5,  0.5,
-        -0.5, -0.5,  0.5,
-        -0.5, -0.5, -0.5,
+        -0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
+         0.5, -0.5, -0.5, 0.0, 1.0, 0.0,
+         0.5, -0.5,  0.5, 0.0, 0.0, 1.0,
+         0.5, -0.5,  0.5, 0.0, 0.0, 1.0,
+        -0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
+        -0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
 
-        -0.5,  0.5, -0.5,
-         0.5,  0.5, -0.5,
-         0.5,  0.5,  0.5,
-         0.5,  0.5,  0.5,
-        -0.5,  0.5,  0.5,
-        -0.5,  0.5, -0.5,
+        -0.5,  0.5, -0.5, 1.0, 0.0, 0.0,
+         0.5,  0.5, -0.5, 0.0, 1.0, 0.0,
+         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
+         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
+        -0.5,  0.5,  0.5, 0.0, 1.0, 0.0,
+        -0.5,  0.5, -0.5, 1.0, 0.0, 0.0,
     ]
-    vertices = (c_float * len(vertices))(*vertices)
+    data = (c_float * len(data))(*data)
 
-    cube_vao = gl.glGenVertexArrays(1)
+    vao = gl.glGenVertexArrays(1)
+    gl.glBindVertexArray(vao)
+
     vbo = gl.glGenBuffers(1)
-
     gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo)
-    gl.glBufferData(gl.GL_ARRAY_BUFFER, sizeof(vertices), vertices, gl.GL_STATIC_DRAW)
+    gl.glBufferData(gl.GL_ARRAY_BUFFER, sizeof(data), data, gl.GL_STATIC_DRAW)
 
-    gl.glBindVertexArray(cube_vao)
-
-    # -- position attribute
-    gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 3 * sizeof(c_float), c_void_p(0))
+    # -- vertices
+    gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 6 * sizeof(c_float), c_void_p(0))
     gl.glEnableVertexAttribArray(0)
 
-    # -- second configure light vao (vbo is the same)
-    light_vao = gl.glGenVertexArrays(1)
-    gl.glBindVertexArray(light_vao)
+    # -- color
+    gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, 6 * sizeof(c_float), c_void_p(3 * sizeof(c_float)))
+    gl.glEnableVertexAttribArray(1)
 
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo)
-    gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 3 * sizeof(c_float), c_void_p(0))
-    gl.glEnableVertexAttribArray(0)
 
     while not glfw.window_should_close(window):
-        # -- time logic
         current_frame = glfw.get_time()
         delta_time = current_frame - last_frame
         last_frame = current_frame
 
-        # -- input
         process_input(window)
 
-        # -- render
-        gl.glClearColor(0.1, 0.1, 0.1, 1.0)
+        gl.glClearColor(.2, .3, .3, 1.0)
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 
-        lighting_shader.use()
-        lighting_shader.set_vec3("objectColor", Vector3([1.0, 0.5, 0.31]))
-        lighting_shader.set_vec3("lightColor", Vector3([1.0, 1.0, 1.0]))
-
-        # -- view.projection transformations
-        projection = Matrix44.perspective_projection(camera.zoom, SRC_WIDTH/SRC_HEIGHT, 0.1, 100.0)
+        shader.use()
+        projection = Matrix44.perspective_projection(camera.zoom, SRC_WIDTH / SRC_HEIGHT, 0.1, 100.0)
         view = camera.get_view_matrix()
-        lighting_shader.set_mat4("projection", projection)
-        lighting_shader.set_mat4("view", view)
-
-        # -- world transformation
-        model = Matrix44.identity()
-        lighting_shader.set_mat4("model", model)
-
-        # -- render cube
-        gl.glBindVertexArray(cube_vao)
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
-
-        # -- draw lamp object
-        lamp_shader.use()
-        lamp_shader.set_mat4("projection", projection)
-        lamp_shader.set_mat4("view", view)
+        shader.set_mat4("projection", projection)
+        shader.set_mat4("view", view)
 
         model = Matrix44.identity()
-        model *= Matrix44.from_translation(light_pos)
-        model *= Matrix44.from_scale(Vector3([.2, .2, .2]))
-        lamp_shader.set_mat4("model", model)
+        shader.set_mat4("model", model)
 
-        gl.glBindVertexArray(light_vao)
+        gl.glBindVertexArray(vao)
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
-        glfw.swap_buffers(window)
         glfw.poll_events()
+        glfw.swap_buffers(window)
 
-    gl.glDeleteVertexArrays(1, id(cube_vao))
-    gl.glDeleteVertexArrays(1, id(light_vao))
+    gl.glDeleteVertexArrays(1, id(vao))
     gl.glDeleteBuffers(1, id(vbo))
     glfw.terminate()
+
+
+def on_resize(window, w, h):
+    gl.glViewport(0, 0, w, h)
 
 
 def process_input(window):
@@ -209,6 +185,10 @@ def mouse_callback(window, xpos, ypos):
 
 def scroll_callback(window, xoffset, yoffset):
     camera.process_mouse_scroll(yoffset)
+
+
+if __name__ == '__main__':
+    main()
 
 
 if __name__ == '__main__':
