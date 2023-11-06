@@ -49,55 +49,28 @@ def main():
 
     glfw.set_input_mode(window, glfw.CURSOR, glfw.CURSOR_DISABLED)
 
-    gl.glEnable(gl.GL_DEPTH_TEST)
-
     shader = Shader(CURDIR / 'shaders/vertex.vs', CURDIR / 'shaders/fragment.fs')
 
     data = [
-        # positions         colors      normal
-        -0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
-         0.5, -0.5, -0.5, 0.0, 1.0, 0.0,
-         0.5,  0.5, -0.5, 0.0, 0.0, 1.0,
-         0.5,  0.5, -0.5, 0.0, 0.0, 1.0,  # Front
+        -0.5,  0.5,  0.5, 1.0, 0.0, 0.0,
+        -0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
+         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
+         0.5, -0.5,  0.5, 0.0, 0.0, 1.0,
         -0.5,  0.5, -0.5, 0.0, 1.0, 0.0,
         -0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
-
-        -0.5, -0.5,  0.5, 1.0, 0.0, 0.0,
-         0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
-         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
-         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
-        -0.5,  0.5,  0.5, 0.0, 1.0, 0.0,
-        -0.5, -0.5,  0.5, 1.0, 0.0, 0.0,
-
-        -0.5,  0.5,  0.5, 1.0, 0.0, 0.0,
-        -0.5,  0.5, -0.5, 0.0, 1.0, 0.0,
-        -0.5, -0.5, -0.5, 0.0, 0.0, 1.0,
-        -0.5, -0.5, -0.5, 0.0, 0.0, 1.0,
-        -0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
-        -0.5,  0.5,  0.5, 1.0, 0.0, 0.0,
-
-         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
-         0.5,  0.5, -0.5, 0.0, 1.0, 0.0,
-         0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
-         0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
-         0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
-         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
-
-        -0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
-         0.5, -0.5, -0.5, 0.0, 1.0, 0.0,
-         0.5, -0.5,  0.5, 0.0, 0.0, 1.0,
-         0.5, -0.5,  0.5, 0.0, 0.0, 1.0,
-        -0.5, -0.5,  0.5, 0.0, 1.0, 0.0,
-        -0.5, -0.5, -0.5, 1.0, 0.0, 0.0,
-
-        -0.5,  0.5, -0.5, 1.0, 0.0, 0.0,
-         0.5,  0.5, -0.5, 0.0, 1.0, 0.0,
-         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
-         0.5,  0.5,  0.5, 0.0, 0.0, 1.0,
-        -0.5,  0.5,  0.5, 0.0, 1.0, 0.0,
-        -0.5,  0.5, -0.5, 1.0, 0.0, 0.0,
+         0.5,  0.5, -0.5, 1.0, 0.0, 0.0,
+         0.5, -0.5, -0.5, 0.0, 1.0, 0.0
     ]
     data = (c_float * len(data))(*data)
+    indices = [
+        0, 2, 3, 0, 3, 1,
+        2, 6, 7, 2, 7, 3,
+        6, 4, 5, 6, 5, 7,
+        4, 0, 1, 4, 1, 5,
+        0, 4, 6, 0, 6, 2,
+        1, 5, 7, 1, 7, 3,
+    ]
+    indices = (c_uint * len(indices))(*indices)
 
     vao = gl.glGenVertexArrays(1)
     gl.glBindVertexArray(vao)
@@ -105,6 +78,10 @@ def main():
     vbo = gl.glGenBuffers(1)
     gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo)
     gl.glBufferData(gl.GL_ARRAY_BUFFER, sizeof(data), data, gl.GL_STATIC_DRAW)
+
+    ebo = gl.glGenBuffers(1)
+    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, ebo)
+    gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, gl.GL_STATIC_DRAW)
 
     # -- vertices
     gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 6 * sizeof(c_float), c_void_p(0))
@@ -114,6 +91,7 @@ def main():
     gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, 6 * sizeof(c_float), c_void_p(3 * sizeof(c_float)))
     gl.glEnableVertexAttribArray(1)
 
+    gl.glEnable(gl.GL_DEPTH_TEST)
 
     while not glfw.window_should_close(window):
         current_frame = glfw.get_time()
@@ -135,10 +113,10 @@ def main():
         shader.set_mat4("model", model)
 
         gl.glBindVertexArray(vao)
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+        gl.glDrawElements(gl.GL_TRIANGLES, 36, gl.GL_UNSIGNED_INT, c_void_p(0))
 
-        glfw.poll_events()
         glfw.swap_buffers(window)
+        glfw.poll_events()
 
     gl.glDeleteVertexArrays(1, id(vao))
     gl.glDeleteBuffers(1, id(vbo))
